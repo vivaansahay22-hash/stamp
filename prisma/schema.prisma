@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Credential {
+  id          String             @id @default(cuid())
+  publicKey   String
+  status      String             @default("active")
+  issuedAt    DateTime           @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  VerificationEvent VerificationEvent[]
+  RiskEvent   RiskEvent[]
+}
+
+model Enrollment {
+  id              String   @id @default(cuid())
+  credentialId    String?
+  score           Float
+  durationSeconds Int
+  passed          Boolean
+  createdAt       DateTime @default(now())
+}
+
+model VerificationNonce {
+  id          String   @id @default(cuid())
+  credentialId String
+  siteId      String
+  action      String
+  nonce       String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model VerificationEvent {
+  id           String   @id @default(cuid())
+  credentialId String
+  siteId       String
+  action       String
+  timestamp    DateTime @default(now())
+  riskScore    Int
+  decision     String
+  credential   Credential @relation(fields: [credentialId], references: [id])
+}
+
+model RiskEvent {
+  id          String   @id @default(cuid())
+  credentialId String?
+  type        String
+  severity    String
+  timestamp   DateTime @default(now())
+  metadata    Json?
+  credential  Credential? @relation(fields: [credentialId], references: [id])
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  siteId      String   @unique
+  createdAt   DateTime @default(now())
+  policy      SitePolicy?
+}
+
+model SitePolicy {
+  id                 String   @id @default(cuid())
+  siteId             String   @unique
+  allowLowRisk       Boolean  @default(true)
+  stepUpThreshold    Int      @default(60)
+  rateLimitThreshold Int      @default(80)
+  riskTolerance      Int      @default(70)
+  updatedAt          DateTime @updatedAt
+  site               Site     @relation(fields: [siteId], references: [siteId])
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  category    String
+  prompt      String
+  correct     String
+  options     Json
+  createdAt   DateTime @default(now())
+}

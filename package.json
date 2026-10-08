@@ -1,0 +1,25 @@
+{
+  "name": "verity",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace apps/api\" \"npm run dev --workspace apps/web\"",
+    "build": "npm run build --workspace packages/sdk && npm run build --workspace apps/api && npm run build --workspace apps/web",
+    "test": "vitest run",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "seed": "node scripts/seed.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "concurrently": "^9.0.1",
+    "prisma": "^5.8.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.8"
+  }
+}

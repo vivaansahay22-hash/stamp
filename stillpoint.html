@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4f2ec" />
+  <meta name="description" content="A privacy-first verification network prototype that escalates only when risk calls for it." />
+  <title>Stillpoint — Quiet verification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { color-scheme: light; --paper:#f4f2ec; --surface:#fffefa; --ink:#202522; --muted:#737a72; --line:#d7d8ce; --teal:#126c5b; --teal-soft:#dcebe5; --orange:#d65c35; --orange-soft:#f8e6db; --yellow:#d7a72e; --mono:'DM Mono',Consolas,monospace; --sans:'Manrope','Segoe UI',sans-serif; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; scroll-padding-top:24px; }
+    body { margin:0; min-width:320px; background:var(--paper); color:var(--ink); font-family:var(--sans); line-height:1.5; }
+    button,select { font:inherit; } button { cursor:pointer; } a { color:inherit; }
+    .shell { width:min(1440px,100%); min-height:100vh; margin:auto; display:grid; grid-template-columns:236px minmax(0,1fr); }
+    .rail { display:flex; flex-direction:column; min-height:100vh; padding:26px 18px 20px; border-right:1px solid var(--line); background:#eeece4; }
+    .brand { display:flex; align-items:center; gap:11px; margin:0 0 48px 7px; text-decoration:none; }
+    .brand-mark { display:grid; width:31px; height:31px; place-items:center; border-radius:50%; background:var(--teal); color:white; font-size:15px; }
+    .brand-name { font-size:13px; font-weight:800; letter-spacing:.12em; } .brand-sub { display:block; color:var(--muted); font:9px var(--mono); letter-spacing:.08em; }
+    .rail-label { margin:0 9px 10px; color:#858a81; font:9px var(--mono); letter-spacing:.13em; text-transform:uppercase; }
+    .nav { display:grid; gap:5px; } .nav button { display:flex; align-items:center; gap:11px; width:100%; padding:11px 10px; border:0; border-radius:4px; background:transparent; color:#5e665f; text-align:left; font-size:12px; font-weight:700; transition:background-color .18s ease,color .18s ease,box-shadow .18s ease,transform .18s ease,border-color .18s ease; }
+    .nav button:hover { background:rgba(255,255,255,.38); color:var(--ink); }
+    .nav button.active { background:rgba(255,255,255,.72); color:var(--ink); box-shadow:inset 3px 0 var(--teal), 0 1px 0 rgba(18,108,91,.04); transform:translateX(1px); }
+    .nav button:active { transform:translateX(1px) scale(.985); }
+    .nav-icon { display:grid; width:23px; height:23px; place-items:center; border:1px solid var(--line); border-radius:3px; color:var(--teal); font:11px var(--mono); }
+    .rail-bottom { margin-top:auto; } .privacy-note { padding:13px 12px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; line-height:1.7; }
+    .privacy-note strong { display:block; margin-bottom:4px; color:var(--ink); font:10px var(--mono); text-transform:uppercase; }
+    .main { min-width:0; padding:0 42px 56px; } .topbar { display:flex; justify-content:space-between; align-items:center; min-height:70px; border-bottom:1px solid var(--line); }
+    .crumb { color:var(--muted); font:10px var(--mono); letter-spacing:.04em; } .top-status { display:inline-flex; align-items:center; gap:8px; color:var(--muted); font:9px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--yellow); }
+    .content { display:none; padding-top:35px; opacity:0; transform:translateY(8px); }
+    .content.active { display:block; animation:enter .28s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes enter { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes tab-in { from { opacity:0; transform:translateY(6px) scale(.995); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes tab-out { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-4px); } }
+    @media (prefers-reduced-motion: no-preference) {
+      .content.active { view-transition-name:active-view; }
+      ::view-transition-old(active-view) { animation:tab-out .15s ease-in both; }
+      ::view-transition-new(active-view) { animation:tab-in .24s cubic-bezier(.2,.7,.2,1) both; }
+      ::view-transition-old(root),::view-transition-new(root) { animation:none; }
+    }
+    .eyebrow { margin:0 0 12px; color:var(--teal); font:10px var(--mono); letter-spacing:.13em; text-transform:uppercase; }
+    h1,h2,h3,p { margin-top:0; } h1 { max-width:760px; margin-bottom:13px; font-size:clamp(36px,4.6vw,62px); line-height:1.04; font-weight:600; }
+    h1 em { color:var(--teal); font-style:normal; } h2 { margin-bottom:8px; font-size:18px; line-height:1.25; font-weight:700; } h3 { margin-bottom:8px; font-size:13px; }
+    .lede { max-width:610px; margin-bottom:27px; color:var(--muted); font-size:13px; line-height:1.8; }
+    .overview-heading { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:20px; }
+    .overview-heading h1 { max-width:none; margin:0; font-size:34px; line-height:1.2; font-weight:700; }
+    .overview-intro { max-width:390px; margin:0 0 3px; color:var(--muted); font-size:11px; line-height:1.7; }
+    .overview-grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(290px,.75fr); gap:16px; margin-top:0; }
+    .panel { min-width:0; border:1px solid var(--line); border-radius:4px; background:var(--surface); } .panel-head { display:flex; justify-content:space-between; align-items:start; gap:12px; padding:17px 18px 14px; border-bottom:1px solid var(--line); }
+    .panel-head p { margin:0; color:var(--muted); font-size:10px; } .panel-body { padding:18px; }
+    .request-row { display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:13px 0 17px; border-bottom:1px solid var(--line); }
+    .request-origin { color:var(--muted); font:9px var(--mono); text-transform:uppercase; } .request-title { margin:4px 0 0; font-size:13px; font-weight:700; }
+    .request-state { color:var(--teal); font:9px var(--mono); text-align:right; text-transform:uppercase; } .request-state.warn { color:var(--orange); }
+    .button-row { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .button { min-height:37px; padding:9px 13px; border:1px solid var(--teal); border-radius:3px; background:var(--teal); color:white; font:10px var(--mono); }
+    .button:hover { background:#0e574a; } .button.secondary { border-color:var(--line); background:transparent; color:var(--ink); }
+    .button.secondary:hover { border-color:var(--teal); color:var(--teal); } .button.danger { border-color:#d7a28f; background:transparent; color:#914328; }
+    .button:disabled { cursor:wait; opacity:.55; } .status-line { min-height:18px; margin:10px 0 0; color:var(--muted); font:9px var(--mono); line-height:1.6; }
+    .risk-readout { display:grid; grid-template-columns:1fr auto; align-items:end; gap:8px; } .risk-number { font:42px/1 var(--mono); }
+    .risk-number small { color:var(--muted); font-size:12px; } .risk-decision { max-width:145px; padding:6px 8px; border:1px solid #acd1c3; border-radius:3px; background:var(--teal-soft); color:#175444; font:9px var(--mono); text-align:center; text-transform:uppercase; }
+    .risk-decision.medium { border-color:#e4cd8c; background:#f7f0d9; color:#80620d; } .risk-decision.high,.risk-decision.critical { border-color:#e1b39f; background:var(--orange-soft); color:#914328; }
+    .meter { height:7px; margin:15px 0 9px; overflow:hidden; border-radius:5px; background:#e7e6dd; } .meter-fill { width:8%; height:100%; border-radius:inherit; background:var(--teal); transition:width .25s ease,background .25s ease; }
+    .meter-labels { display:flex; justify-content:space-between; color:var(--muted); font:8px var(--mono); text-transform:uppercase; }
+    .signal-list { display:grid; margin-top:14px; } .signal-item { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-top:1px solid #ecebe5; color:var(--muted); font-size:10px; }
+    .signal-item strong { color:var(--ink); font:9px var(--mono); }
+    .section-title { display:flex; justify-content:space-between; align-items:end; gap:18px; margin-bottom:20px; } .section-title p:last-child { max-width:500px; margin:0; color:var(--muted); font-size:11px; line-height:1.7; }
+    .identity-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(270px,.68fr); gap:16px; }
+    .key-visual { display:flex; align-items:center; gap:15px; padding:16px; border:1px solid var(--line); border-radius:3px; background:#f8f7f1; }
+    .key-glyph { display:grid; flex:0 0 46px; height:46px; place-items:center; border-radius:50%; background:var(--teal-soft); color:var(--teal); font-size:19px; }
+    .key-label { margin:0 0 4px; color:var(--muted); font:9px var(--mono); text-transform:uppercase; } .key-id { margin:0; overflow-wrap:anywhere; font:10px var(--mono); }
+    .bullet-list { display:grid; gap:12px; margin:14px 0 0; padding:0; list-style:none; } .bullet-list li { display:grid; grid-template-columns:18px 1fr; gap:8px; color:var(--muted); font-size:10px; line-height:1.7; }
+    .bullet-list li::before { content:'+'; color:var(--teal); font:12px var(--mono); }
+    .activity { display:grid; } .activity-row { display:grid; grid-template-columns:120px 1fr auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid #ecebe5; font-size:10px; }
+    .activity-row:last-child { border-bottom:0; } .activity-time { color:var(--muted); font:9px var(--mono); } .activity-state { color:var(--teal); font:8px var(--mono); text-transform:uppercase; }
+    .empty { padding:18px 0; color:var(--muted); font-size:10px; }
+    .overview-footnote { margin:12px 0 0; color:var(--muted); font-size:9px; line-height:1.6; }
+    @media(min-width:900px) {
+      .content { display:block; scroll-margin-top:24px; }
+      .content:not(.active) { opacity:1; transform:none; animation:none; }
+      .rail { position:sticky; top:0; height:100vh; min-height:0; align-self:start; }
+      #view-identity { margin-top:32px; padding-top:28px; border-top:1px solid var(--line); }
+    }
+    @media(min-width:981px) {
+      .main { padding-right:36px; padding-left:36px; }
+      .topbar { min-height:64px; }
+      #view-overview.content { padding-top:26px; }
+      #view-overview .overview-heading { gap:32px; margin-bottom:24px; }
+      #view-overview .overview-heading h1 { font-size:40px; }
+      #view-overview .overview-intro { max-width:440px; font-size:13px; }
+      #view-overview .panel-head { padding:19px 21px 16px; }
+      #view-overview .panel-head p { font-size:12px; }
+      #view-overview .panel-body { padding:20px 21px; }
+      #view-overview h2 { font-size:20px; }
+      #view-overview .request-origin { font-size:10px; }
+      #view-overview .request-title { font-size:15px; }
+      #view-overview .request-state { font-size:10px; }
+      #view-overview .button { min-height:42px; padding:10px 15px; font-size:11px; }
+      #view-overview .status-line { font-size:10px; }
+      #view-overview .risk-number { font-size:48px; }
+      #view-overview .risk-number small { font-size:13px; }
+      #view-overview .risk-decision { padding:7px 9px; font-size:10px; }
+      #view-overview .meter-labels { font-size:9px; }
+      #view-overview .activity-row { font-size:12px; }
+      #view-overview .activity-time { font-size:10px; }
+      #view-overview .activity-state { font-size:9px; }
+      #view-overview .empty { font-size:12px; }
+      #view-overview .overview-footnote { font-size:10px; }
+    }
+    @media(max-width:980px) { .shell { grid-template-columns:190px minmax(0,1fr); } .main { padding-right:25px; padding-left:25px; } .overview-grid,.identity-grid { grid-template-columns:1fr; } }
+    @media(max-width:680px) {
+      .shell { display:block; } .rail { min-height:0; padding:14px 16px 8px; border-right:0; border-bottom:1px solid var(--line); }
+      .brand { margin:0 0 12px 2px; } .rail-label,.rail-bottom { display:none; } .nav { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+      .nav button { justify-content:center; gap:6px; padding:8px 4px; font-size:9px; } .nav-icon { width:20px; height:20px; }
+      .nav button.active { box-shadow:inset 0 -2px var(--teal); }
+      .main { padding:0 16px 34px; } .topbar { min-height:49px; } .content { padding-top:25px; } h1 { font-size:39px; }
+      .overview-heading { align-items:flex-start; flex-direction:column; gap:7px; margin-bottom:16px; }
+      .overview-heading h1 { font-size:29px; } .overview-intro { max-width:100%; }
+      .lede { font-size:12px; } .overview-grid { gap:11px; margin-top:0; } .panel-head,.panel-body { padding-right:13px; padding-left:13px; }
+      .section-title { align-items:start; flex-direction:column; } .activity-row { grid-template-columns:72px 1fr; }
+      .activity-state { grid-column:2; } .request-row { grid-template-columns:1fr; gap:8px; } .request-state { text-align:left; }
+    }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <a class="brand" href="#overview" aria-label="Stillpoint overview"><span class="brand-mark" aria-hidden="true">s</span><span><span class="brand-name">STILLPOINT</span><span class="brand-sub">VERIFICATION NETWORK</span></span></a>
+      <p class="rail-label">Workspace</p>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="active" type="button" data-view="overview"><span class="nav-icon">01</span>Overview</button>
+        <button type="button" data-view="identity"><span class="nav-icon">02</span>Identity</button>
+      </nav>
+      <div class="rail-bottom"><div class="privacy-note"><strong>Local prototype</strong>Private keys stay in this browser. Shared reputation is not connected.</div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><span class="crumb" id="crumb">WORKSPACE / OVERVIEW</span><span class="top-status"><span class="dot"></span>Prototype mode</span></header>
+      <section class="content active" id="view-overview" aria-labelledby="overview-title">
+        <div class="overview-heading"><div><p class="eyebrow">OVERVIEW</p><h1 id="overview-title">Verification overview</h1></div><p class="overview-intro">Credential status and request risk, at a glance.</p></div>
+        <div class="overview-grid">
+          <section class="panel" aria-labelledby="request-heading"><div class="panel-head"><div><h2 id="request-heading">Request verification</h2><p>A demo site asks the device to sign a one-time challenge.</p></div><span class="request-state" id="request-state">READY</span></div>
+            <div class="panel-body"><div class="request-row"><div><div class="request-origin">PARTICIPATING SITE · DEMO</div><p class="request-title">Create an account</p></div><span class="request-state" id="credential-state">NO CREDENTIAL</span></div>
+              <div class="button-row"><button class="button" id="run-check" type="button">Run silent check</button><button class="button secondary" id="go-identity" type="button">Set up credential</button></div><p class="status-line" id="request-message" role="status" aria-live="polite">No request has been checked yet.</p>
+            </div>
+          </section>
+          <section class="panel" aria-labelledby="risk-heading"><div class="panel-head"><div><h2 id="risk-heading">Risk assessment</h2><p>Illustrative score · 0 is lower risk</p></div></div>
+            <div class="panel-body"><div class="risk-readout"><div class="risk-number"><span id="overview-score">08</span><small> / 100</small></div><div class="risk-decision" id="overview-decision">Allow quietly</div></div>
+              <div class="meter" aria-label="Risk score"><div class="meter-fill" id="overview-meter"></div></div><div class="meter-labels"><span>Allow</span><span>Check</span><span>Challenge</span><span>Limit</span></div>
+            </div>
+          </section>
+        </div>
+        <section class="panel" style="margin-top:16px" aria-labelledby="activity-heading"><div class="panel-head"><div><h2 id="activity-heading">Recent activity</h2><p>Activity from this browser only.</p></div><button class="button secondary" id="clear-activity" type="button">Clear history</button></div><div class="panel-body activity" id="activity-list"><div class="empty">No checks yet. Run a silent check to see the local event trail.</div></div></section>
+        <p class="overview-footnote">Prototype only: risk scores are illustrative; human registration and shared reputation are not connected.</p>
+      </section>
+      <section class="content" id="view-identity" aria-labelledby="identity-title">
+        <div class="section-title"><div><p class="eyebrow">Pseudonymous credential</p><h1 id="identity-title">Your key stays<br /><em>with you.</em></h1></div><p>Generate a browser-held signing key and prove possession without sending the private key to a server. This demo stores a non-exportable key in local IndexedDB.</p></div>
+        <div class="identity-grid"><section class="panel"><div class="panel-head"><div><h2>Device credential</h2><p id="identity-status">No local credential found.</p></div><span class="request-state" id="identity-badge">NOT SET UP</span></div><div class="panel-body">
+          <div class="key-visual"><span class="key-glyph" aria-hidden="true">⌘</span><div><p class="key-label">Anonymous public identifier</p><p class="key-id" id="key-id">Not generated</p></div></div>
+          <ul class="bullet-list"><li>Private key is created as non-exportable and stored on this device.</li><li>Each check signs a fresh random challenge; the signature is verified locally in this prototype.</li><li>Clearing this browser's site data removes the credential.</li></ul>
+          <div class="button-row" style="margin-top:18px"><button class="button" id="create-credential" type="button">Generate local credential</button><button class="button danger" id="revoke-credential" type="button" hidden>Remove credential</button></div><p class="status-line" id="identity-message" role="status" aria-live="polite"></p>
+        </div></section>
+        <section class="panel"><div class="panel-head"><div><h2>What this proves</h2><p>Possession, not personhood.</p></div></div><div class="panel-body"><div class="signal-list" style="margin-top:0"><div class="signal-item"><span>Signature valid</span><strong>KEY CONTROL</strong></div><div class="signal-item"><span>Human verified</span><strong>NOT PROVEN</strong></div><div class="signal-item"><span>Cross-site reputation</span><strong>NOT CONNECTED</strong></div></div><p class="status-line" style="margin-top:14px">A production enrollment needs abuse-resistant issuance, recovery and revocation, and privacy-reviewed infrastructure. A browser key alone cannot stop Sybil attacks.</p></div></section></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const DB_NAME = 'stillpoint-prototype';
+    const STORE_NAME = 'credential';
+    const ACTIVITY_KEY = 'stillpoint-activity-v1';
+    const navButtons = [...document.querySelectorAll('[data-view]')];
+    const views = [...document.querySelectorAll('.content')];
+    let credential = null;
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    async function databaseAction(mode, action) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, mode);
+        const store = transaction.objectStore(STORE_NAME);
+        const request = action(store);
+        request.onsuccess = () => { const result = request.result; if (mode === 'readonly') { db.close(); resolve(result || null); } };
+        transaction.oncomplete = () => { db.close(); resolve(); };
+        transaction.onerror = () => { db.close(); reject(transaction.error); };
+        request.onerror = () => { db.close(); reject(request.error); };
+      });
+    }
+    const storeCredential = (value) => databaseAction('readwrite', (store) => store.put(value, 'active'));
+    const readCredential = () => databaseAction('readonly', (store) => store.get('active'));
+    const removeCredential = () => databaseAction('readwrite', (store) => store.delete('active'));
+    function toBase64Url(bytes) {
+      let binary = '';
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+    }
+    function currentRiskScore() {
+      return credential ? 0 : 28;
+    }
+    function recordActivity(label, state) {
+      const activity = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+      activity.unshift({ label, state, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+      localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activity.slice(0, 8)));
+      renderActivity();
+    }
+    function renderActivity() {
+      const target = document.querySelector('#activity-list');
+      const activity = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+      target.innerHTML = activity.length ? activity.map((item) => `<div class="activity-row"><span class="activity-time">${item.time}</span><span>${item.label}</span><span class="activity-state">${item.state}</span></div>`).join('') : '<div class="empty">No checks yet. Run a silent check to see the local event trail.</div>';
+    }
+    function renderCredential() {
+      const exists = Boolean(credential);
+      document.querySelector('#credential-state').textContent = exists ? 'KEY AVAILABLE' : 'NO CREDENTIAL';
+      document.querySelector('#identity-status').textContent = exists ? 'A local signing credential is ready.' : 'No local credential found.';
+      document.querySelector('#identity-badge').textContent = exists ? 'ACTIVE ON DEVICE' : 'NOT SET UP';
+      document.querySelector('#key-id').textContent = credential ? credential.id : 'Not generated';
+      document.querySelector('#create-credential').hidden = exists;
+      document.querySelector('#revoke-credential').hidden = !exists;
+      document.querySelector('#go-identity').hidden = exists;
+    }
+    function getRiskDecision(score) {
+      if (score >= 75) return { key:'critical', label:'Rate-limit / block', message:'Severe risk: temporarily rate-limit or block, with a clear recovery path.' };
+      if (score >= 50) return { key:'high', label:'Challenge required', message:'High risk: require an additional challenge before allowing the request.' };
+      if (score >= 25) return { key:'medium', label:'Run silent checks', message:'Medium risk: gather additional low-friction signals, then reassess.' };
+      return { key:'low', label:'Allow quietly', message:'Low risk: allow the request without interrupting the user.' };
+    }
+    function updateRisk() {
+      const score = currentRiskScore();
+      const decision = getRiskDecision(score);
+      document.querySelector('#overview-score').textContent = String(score).padStart(2, '0');
+      const badge = document.querySelector('#overview-decision');
+      badge.textContent = decision.label;
+      badge.className = `risk-decision${decision.key === 'low' ? '' : ` ${decision.key}`}`;
+      const meter = document.querySelector('#overview-meter');
+      meter.style.width = `${Math.max(score, 3)}%`;
+      meter.style.background = decision.key === 'low' ? 'var(--teal)' : decision.key === 'medium' ? 'var(--yellow)' : 'var(--orange)';
+    }
+    function showView(name) {
+      const laptopLayout = window.matchMedia('(min-width: 900px)').matches;
+      const activateView = () => {
+        views.forEach((view) => { view.classList.toggle('active', view.id === `view-${name}`); view.setAttribute('aria-hidden', view.id !== `view-${name}` ? 'true' : 'false'); });
+        navButtons.forEach((button) => {
+          const isActive = button.dataset.view === name;
+          button.classList.toggle('active', isActive);
+          button.setAttribute('aria-current', isActive ? 'page' : 'false');
+          button.setAttribute('aria-pressed', String(isActive));
+        });
+        document.querySelector('#crumb').textContent = `WORKSPACE / ${name.replace('-', ' ').toUpperCase()}`;
+      };
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduceMotion && document.startViewTransition) document.startViewTransition(activateView);
+      else activateView();
+      if (laptopLayout) {
+        const section = document.querySelector(`#view-${name}`);
+        const top = section.getBoundingClientRect().top + window.scrollY - 24;
+        window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }
+    async function createLocalCredential() {
+      const button = document.querySelector('#create-credential');
+      const message = document.querySelector('#identity-message');
+      button.disabled = true;
+      message.textContent = 'Generating a non-exportable key on this device…';
+      try {
+        if (!crypto.subtle || !indexedDB) throw new Error('Secure browser storage is unavailable. Open this prototype on localhost or HTTPS.');
+        const pair = await crypto.subtle.generateKey({ name:'ECDSA', namedCurve:'P-256' }, false, ['sign', 'verify']);
+        const publicBytes = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
+        const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', publicBytes));
+        credential = { id:toBase64Url(digest.slice(0, 12)), publicKey:toBase64Url(publicBytes), privateKey:pair.privateKey };
+        await storeCredential(credential);
+        renderCredential(); updateRisk();
+        message.textContent = 'Credential created and stored locally. The private key is non-exportable.';
+        recordActivity('Local pseudonymous credential created', 'KEY CREATED');
+      } catch (error) { message.textContent = error.message || 'Credential setup failed in this browser.'; }
+      finally { button.disabled = false; }
+    }
+    async function runSilentCheck() {
+      const button = document.querySelector('#run-check');
+      const message = document.querySelector('#request-message');
+      const requestState = document.querySelector('#request-state');
+      button.disabled = true; requestState.textContent = 'CHECKING'; message.textContent = 'Evaluating the selected demo signals…';
+      try {
+        if (!credential) {
+          const score = currentRiskScore();
+          const decision = getRiskDecision(score);
+          requestState.textContent = decision.key === 'low' ? 'NO KEY' : decision.label.toUpperCase();
+          requestState.className = 'request-state warn';
+          message.textContent = 'No credential is registered here, so the device cannot sign the challenge. Set one up in Identity to test possession.';
+          recordActivity('Demo account request · no credential', decision.label.toUpperCase());
+          return;
+        }
+        const nonce = crypto.getRandomValues(new Uint8Array(32));
+        const challenge = new TextEncoder().encode(`${location.origin}|${Date.now()}|${toBase64Url(nonce)}`);
+        const signature = await crypto.subtle.sign({ name:'ECDSA', hash:'SHA-256' }, credential.privateKey, challenge);
+        const base64 = credential.publicKey.replaceAll('-', '+').replaceAll('_', '/');
+        const publicBytes = Uint8Array.from(atob(base64 + '='.repeat((4 - base64.length % 4) % 4)), (character) => character.charCodeAt(0));
+        const publicKey = await crypto.subtle.importKey('raw', publicBytes, { name:'ECDSA', namedCurve:'P-256' }, false, ['verify']);
+        const valid = await crypto.subtle.verify({ name:'ECDSA', hash:'SHA-256' }, publicKey, signature, challenge);
+        const score = currentRiskScore();
+        const decision = getRiskDecision(score);
+        requestState.textContent = valid ? decision.label.toUpperCase() : 'FAILED';
+        requestState.className = `request-state${decision.key === 'low' ? '' : ' warn'}`;
+        message.textContent = valid ? `Challenge signature verified locally. Policy response: ${decision.message}` : 'The challenge signature did not verify.';
+        recordActivity('Demo account request · signed challenge', valid ? decision.label.toUpperCase() : 'VERIFY FAILED');
+      } catch (error) {
+        requestState.textContent = 'UNAVAILABLE'; requestState.className = 'request-state warn';
+        message.textContent = error.message || 'This browser could not complete the local signature check.';
+      } finally { button.disabled = false; }
+    }
+    navButtons.forEach((button) => button.addEventListener('click', () => {
+      showView(button.dataset.view);
+    }));
+    document.querySelector('#go-identity').addEventListener('click', () => showView('identity'));
+    document.querySelector('#create-credential').addEventListener('click', createLocalCredential);
+    document.querySelector('#run-check').addEventListener('click', runSilentCheck);
+    document.querySelector('#revoke-credential').addEventListener('click', async () => {
+      try { await removeCredential(); credential = null; renderCredential(); updateRisk(); document.querySelector('#identity-message').textContent = 'Local credential removed from this browser.'; recordActivity('Local pseudonymous credential removed', 'REMOVED'); }
+      catch (error) { document.querySelector('#identity-message').textContent = error.message || 'Could not remove local credential.'; }
+    });
+    document.querySelector('#clear-activity').addEventListener('click', () => { localStorage.removeItem(ACTIVITY_KEY); renderActivity(); });
+    async function initialize() {
+      try { credential = await readCredential(); }
+      catch (error) { document.querySelector('#identity-message').textContent = 'Local browser storage is unavailable. Credential setup may not persist.'; }
+      renderCredential(); renderActivity(); updateRisk();
+      const target = location.hash.slice(1);
+      if (['overview','identity'].includes(target)) showView(target);
+    }
+    initialize();
+  </script>
+</body>
+</html>

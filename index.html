@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stillpoint — Quiet verification</title>
+  <meta name="description" content="A privacy-first verification network prototype." />
+  <meta http-equiv="refresh" content="0; url=stillpoint.html" />
+  <script>window.location.replace('stillpoint.html');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #62b4ff;
+      --muted: #9aaeca;
+      --line: #26374e;
+      --page: #05070a;
+      --surface: #0d121a;
+      --coral: #ff4d5d;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding-bottom: 48px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .brand-mark {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--coral);
+      display: inline-block;
+      box-shadow: 0 0 0 4px rgba(255, 77, 93, 0.16);
+    }
+
+    nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+      min-height: calc(100vh - 86px);
+      padding: 72px 0 96px;
+    }
+
+    .hero-copy { padding: 14px 0 0; }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--coral);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3.2rem, 6vw, 7rem);
+      line-height: 0.9;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+    }
+
+    h1 .accent {
+      color: var(--coral);
+      font-style: normal;
+    }
+
+    .intro {
+      max-width: 420px;
+      color: var(--muted);
+      margin-top: 24px;
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    .owner-note {
+      max-width: 780px;
+      margin: 0 auto 88px;
+      padding: 28px 0 0 28px;
+      border-left: 2px solid var(--coral);
+    }
+
+    .owner-note h2 {
+      margin: 0 0 14px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.8rem, 3vw, 2.7rem);
+      line-height: 1.1;
+    }
+
+    .owner-note p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    .planner-shell { display: none; }
+
+    .hero-panel {
+      position: relative;
+      padding: 26px 24px 22px 28px;
+      border-left: 1px solid var(--ink);
+      background: rgba(22, 119, 210, 0.12);
+      min-height: 260px;
+    }
+
+    .hero-panel::before {
+      content: '✦';
+      position: absolute;
+      top: -12px;
+      left: -9px;
+      font-size: 22px;
+      color: var(--coral);
+      background: var(--page);
+      padding: 0 4px;
+    }
+
+    .hero-panel h2 {
+      margin: 0 0 12px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(2rem, 2vw, 2.5rem);
+      line-height: 1.1;
+    }
+
+    .hero-panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .planner-shell {
+      margin-top: 72px;
+      padding-top: 28px;
+      border-top: 1px solid var(--ink);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-button {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .tab-button.active,
+    .tab-button:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--page);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .single-col { grid-template-columns: 1fr 1fr; }
+
+    .cta-row { margin-top: 26px; }
+
+    .cta {
+      display: inline-block;
+      padding: 12px 14px;
+      background: var(--coral);
+      color: #fff;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+    }
+
+    .date-picker {
+      display: grid;
+      gap: 8px;
+      min-width: 170px;
+    }
+
+    .date-picker span {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .timeline {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .timeline-header strong { font-family: 'Playfair Display', Georgia, serif; font-size: 1.35rem; }
+    .timeline-header span { color: var(--muted); font-size: 11px; }
+
+    .timeline-track {
+      display: grid;
+      gap: 8px;
+      padding: 16px 20px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px dashed var(--line);
+      font-size: 12px;
+    }
+
+    .timeline-item:last-child { border-bottom: 0; }
+    .timeline-item time { color: var(--coral); font-weight: 500; }
+    .timeline-empty { color: var(--muted); font-size: 12px; }
+
+    .notification-button {
+      margin-top: 14px;
+      background: var(--page);
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 24px var(--shadow);
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin: 0 0 16px;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(1.6rem, 2vw, 2.2rem);
+      line-height: 1.1;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      padding: 11px 12px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--page);
+      padding: 12px 14px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--coral);
+      border-color: var(--coral);
+      transform: translateY(-1px);
+    }
+
+    .status {
+      min-height: 18px;
+      margin: 0;
+      color: var(--coral);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .pill.rigid { background: var(--peach); border-color: rgba(255,122,92,0.25); }
+    .pill.flexible { background: var(--blue); border-color: rgba(137,187,224,0.25); }
+    .pill.alarm { background: var(--yellow); border-color: rgba(170,150,55,0.18); }
+
+    .summary-box {
+      margin-top: 24px;
+      background: linear-gradient(135deg, rgba(207,230,246,0.7), rgba(255,183,166,0.25));
+      border: 1px solid var(--line);
+      padding: 20px;
+    }
+
+    .summary-box h3 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+    }
+
+    .summary-box p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--ink);
+    }
+
+    @media (max-width: 820px) {
+      .hero, .dashboard { grid-template-columns: 1fr; }
+      .page { width: min(100% - 24px, 1180px); }
+      .hero { min-height: auto; padding: 56px 0 72px; }
+      .hero-panel { min-height: auto; }
+      .grid-2 { grid-template-columns: 1fr; }
+      nav { gap: 12px; }
+      .section-header { align-items: start; flex-direction: column; }
+      .single-col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a class="brand" href="#intro" aria-label="FlowFit home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        FlowFit
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#intro">Intro</a>
+        <a href="calendar.html">Calendar</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" id="intro">
+        <div class="hero-copy">
+          <p class="eyebrow">Alarm + calendar</p>
+          <h1>Build a day that<br />moves with <span class="accent">you</span>.</h1>
+          <p class="intro">A calm scheduling engine for students and adults who need structure without becoming rigid. Start with the big picture, then step into a planner that adapts with you.</p>
+          <div class="cta-row">
+            <a class="cta" href="calendar.html">Open calendar</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel" aria-label="Product highlights">
+          <h2>Built for real routines.</h2>
+          <p>Use rigid blocks for the must-do moments and flexible windows for the things that can shift. It keeps your schedule grounded while still leaving room to adapt.</p>
+          <div class="chip-row">
+            <span class="chip">Rigid tasks</span>
+            <span class="chip">Flexible windows</span>
+            <span class="chip">Smart alarms</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="owner-note" aria-labelledby="owner-note-title">
+        <p class="eyebrow">Owner's note</p>
+        <h2 id="owner-note-title">The product should plan with people, not talk at them.</h2>
+        <p>The core AI of the product will act as the user's personal scheduling engine rather than simply functioning as a chatbot. It will interpret calendar entries, identify whether activities are flexible or rigid, understand deadlines and priorities, and automatically create an efficient schedule. When a user's calendar changes, the AI can reorganize flexible activities while protecting fixed commitments. It will also use the resulting schedule to determine appropriate reminders and alarms. The goal is to reduce the amount of manual planning required from students and adults while keeping the user in control of their schedule.</p>
+      </section>
+
+      <section class="planner-shell" id="planner">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">Planner area</p>
+            <h2>Calendar + alarm center</h2>
+          </div>
+          <label class="date-picker">
+            <span>Viewing date</span>
+            <input id="view-date" type="date" />
+          </label>
+          <div class="tabs" aria-label="Planner tabs">
+            <button class="tab-button active" type="button" data-tab="schedule">Calendar</button>
+            <button class="tab-button" type="button" data-tab="alarms">Alarm</button>
+          </div>
+        </div>
+
+        <div class="tab-panel active" id="schedule-panel">
+          <div class="dashboard">
+            <article class="card">
+              <h3>Add a block</h3>
+              <form id="task-form">
+                <div class="grid-2">
+                  <label>
+                    Task name
+                    <input type="text" name="title" placeholder="Example: Biology revision" required />
+                  </label>
+                  <label>
+                    Type
+                    <select name="type">
+                      <option value="rigid">Rigid</option>
+                      <option value="flexible">Flexible</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="grid-2">
+                  <label>
+                    Start time
+                    <input type="time" name="start" required />
+                  </label>
+                  <label>
+                    Date
+                    <input type="date" name="date" required />
+                  </label>
+                </div>
+
+                <div class="grid-2">
+                  <label>
+                    Duration (mins)
+                    <input type="number" name="duration" min="15" max="240" value="60" required />
+                  </label>
+                </div>
+
+                <label>
+                  Notes
+                  <textarea name="notes" placeholder="Optional: reminders, energy level, location..."></textarea>
+                </label>
+
+                <button type="submit">Save block</button>
+                <p class="status" id="task-status" role="status" aria-live="polite"></p>
+              </form>
+            </article>
+
+            <article class="card">
+              <h3>Today's rhythm</h3>
+              <ul class="list" id="task-list"></ul>
+            </article>
+          </div>
+
+          <div class="summary-box" aria-live="polite">
+            <h3>Daily rhythm</h3>
+            <p id="summary-text"></p>
+          </div>
+
+          <div class="timeline" aria-live="polite">
+            <div class="timeline-header">
+              <strong id="timeline-date">Today's timeline</strong>
+              <span id="timeline-count"></span>
+            </div>
+            <div class="timeline-track" id="timeline-track"></div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="alarms-panel">
+          <div class="dashboard single-col">
+            <article class="card alarm-card">
+              <h3>Alarm reminders</h3>
+              <form id="alarm-form">
+                <label>
+                  Reminder label
+                  <input type="text" name="label" placeholder="Example: Start focus sprint" required />
+                </label>
+
+                <label>
+                  Time
+                  <input type="time" name="time" required />
+                </label>
+
+                <button type="submit">Add alarm</button>
+                <button class="notification-button" id="notification-button" type="button">Enable browser alerts</button>
+                <p class="status" id="alarm-status" role="status" aria-live="polite"></p>
+              </form>
+            </article>
+
+            <article class="card">
+              <h3>Alarm queue</h3>
+              <ul class="list" id="alarm-list"></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    if (document.querySelector('#task-form')) {
+    function localDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    const todayKey = localDateKey();
+    const initialTasks = [
+      { title: 'Deep work sprint', type: 'rigid', start: '08:30', duration: 90, notes: 'Focus block before meetings.', date: todayKey },
+      { title: 'Gym or walk', type: 'flexible', start: '18:00', duration: 45, notes: 'Move the time if work runs long.', date: todayKey },
+      { title: 'Lecture prep', type: 'rigid', start: '13:00', duration: 60, notes: 'Must complete before afternoon.', date: todayKey }
+    ];
+
+    const initialAlarms = [
+      { label: 'Wake-up cue', time: '06:45' },
+      { label: 'Focus check-in', time: '08:00' }
+    ];
+
+    const state = {
+      tasks: [...initialTasks],
+      alarms: [...initialAlarms]
+    };
+
+    const taskForm = document.querySelector('#task-form');
+    const alarmForm = document.querySelector('#alarm-form');
+    const taskList = document.querySelector('#task-list');
+    const alarmList = document.querySelector('#alarm-list');
+    const summaryText = document.querySelector('#summary-text');
+    const taskStatus = document.querySelector('#task-status');
+    const alarmStatus = document.querySelector('#alarm-status');
+    const viewDate = document.querySelector('#view-date');
+    const taskDate = taskForm.elements.date;
+    const timelineDate = document.querySelector('#timeline-date');
+    const timelineCount = document.querySelector('#timeline-count');
+    const timelineTrack = document.querySelector('#timeline-track');
+    const notificationButton = document.querySelector('#notification-button');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const panels = document.querySelectorAll('.tab-panel');
+
+    function toMinutes(value) {
+      const [hours, minutes] = value.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function formatTime(value) {
+      if (!value) return '—';
+      const [hours, minutes] = value.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+    }
+
+    function sortTasks(tasks) {
+      return [...tasks].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+    }
+
+    function formatDate(value) {
+      return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+        .format(new Date(`${value}T12:00:00`));
+    }
+
+    function buildSummary() {
+      const tasks = sortTasks(state.tasks.filter((task) => task.date === viewDate.value));
+      const rigid = tasks.filter((task) => task.type === 'rigid');
+      const flexible = tasks.filter((task) => task.type === 'flexible');
+
+      const strongestRigid = rigid[0] ? `${rigid[0].title} at ${formatTime(rigid[0].start)}` : 'No rigid priority yet';
+      const nextFlexible = flexible[0] ? `${flexible[0].title} in your flexible window` : 'Use free time for recovery and admin';
+
+      summaryText.textContent = `Keep your key anchor around ${strongestRigid}. Protect the most important blocks first, then place ${nextFlexible}. Your planner should stay firm on the essentials and light on the rest.`;
+    }
+
+    function renderTasks() {
+      const tasks = sortTasks(state.tasks.filter((task) => task.date === viewDate.value));
+      taskList.innerHTML = tasks.map((task) => `
+        <li>
+          <div>
+            <strong>${task.title}</strong><br />
+            ${formatTime(task.start)} • ${task.duration} min
+            ${task.notes ? `<br />${task.notes}` : ''}
+          </div>
+          <span class="pill ${task.type}">${task.type}</span>
+        </li>
+      `).join('');
+
+      timelineDate.textContent = formatDate(viewDate.value);
+      timelineCount.textContent = `${tasks.length} ${tasks.length === 1 ? 'block' : 'blocks'}`;
+      timelineTrack.innerHTML = tasks.length ? tasks.map((task) => `
+        <div class="timeline-item">
+          <time>${formatTime(task.start)}</time>
+          <div><strong>${task.title}</strong><br />${task.duration} minutes · ${task.type} ${task.notes ? `· ${task.notes}` : ''}</div>
+        </div>
+      `).join('') : '<div class="timeline-empty">Nothing planned for this date yet. Add a block to give the day a shape.</div>';
+
+      alarmList.innerHTML = state.alarms.map((alarm) => `
+        <li>
+          <div>
+            <strong>${alarm.label}</strong><br />
+            ${formatTime(alarm.time)}
+          </div>
+          <span class="pill alarm">Alarm</span>
+        </li>
+      `).join('');
+
+      buildSummary();
+    }
+
+    function checkAlarms() {
+      const currentTime = new Date().toTimeString().slice(0, 5);
+      state.alarms.forEach((alarm) => {
+        if (alarm.time === currentTime && alarm.lastTriggered !== todayKey) {
+          alarm.lastTriggered = todayKey;
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(`FlowFit: ${alarm.label}`, { body: `Your alarm is set for ${formatTime(alarm.time)}.` });
+          }
+        }
+      });
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const nextTab = button.dataset.tab;
+
+        tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+        panels.forEach((panel) => {
+          panel.classList.toggle('active', panel.id === `${nextTab}-panel`);
+        });
+      });
+    });
+
+    taskForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(taskForm);
+      const payload = Object.fromEntries(formData.entries());
+
+      if (!payload.title || !payload.start || !payload.duration) {
+        taskStatus.textContent = 'Add the missing task details.';
+        return;
+      }
+
+      state.tasks.push({
+        title: String(payload.title).trim(),
+        type: payload.type,
+        start: payload.start,
+        duration: Number(payload.duration),
+        notes: String(payload.notes || '').trim(),
+        date: payload.date
+      });
+
+      taskForm.reset();
+      taskDate.value = viewDate.value;
+      taskStatus.textContent = 'Block added to your rhythm.';
+      renderTasks();
+    });
+
+    alarmForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(alarmForm);
+      const payload = Object.fromEntries(formData.entries());
+
+      if (!payload.label || !payload.time) {
+        alarmStatus.textContent = 'Add a label and time.';
+        return;
+      }
+
+      state.alarms.push({
+        label: String(payload.label).trim(),
+        time: payload.time
+      });
+
+      alarmForm.reset();
+      alarmStatus.textContent = 'Alarm added.';
+      renderTasks();
+    });
+
+    viewDate.addEventListener('change', () => {
+      taskDate.value = viewDate.value;
+      renderTasks();
+    });
+
+    notificationButton.addEventListener('click', async () => {
+      if (!('Notification' in window)) {
+        alarmStatus.textContent = 'Browser alerts are not supported here.';
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      alarmStatus.textContent = permission === 'granted'
+        ? 'Browser alerts enabled.'
+        : 'Browser alerts were not enabled.';
+      notificationButton.textContent = permission === 'granted' ? 'Alerts enabled' : 'Enable browser alerts';
+    });
+
+    viewDate.value = todayKey;
+    taskDate.value = todayKey;
+    renderTasks();
+    setInterval(checkAlarms, 30_000);
+    }
+  </script>
+</body>
+</html>
